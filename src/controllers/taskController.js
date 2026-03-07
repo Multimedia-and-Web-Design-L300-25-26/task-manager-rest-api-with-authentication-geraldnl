@@ -3,7 +3,7 @@ import Task from "../models/Task.js";
 
 export const createTask = async (req, res) => {
   try {
-    const { title, completed } = req.body;
+    const { title, description, completed } = req.body;
 
     if (!title) {
       return res.status(400).json({ message: "Task title is required" });
@@ -11,8 +11,9 @@ export const createTask = async (req, res) => {
 
     const task = await Task.create({
       title,
+      description,
       completed: completed ?? false,
-      user: req.user._id,
+      owner: req.user._id,
     });
 
     return res.status(201).json(task);
@@ -23,7 +24,7 @@ export const createTask = async (req, res) => {
 
 export const getTasks = async (req, res) => {
   try {
-    const tasks = await Task.find({ user: req.user._id }).sort({ createdAt: -1 });
+    const tasks = await Task.find({ owner: req.user._id }).sort({ createdAt: -1 });
     return res.status(200).json(tasks);
   } catch (error) {
     return res.status(500).json({ message: "Server error" });
@@ -44,7 +45,7 @@ export const deleteTask = async (req, res) => {
       return res.status(404).json({ message: "Task not found" });
     }
 
-    if (task.user.toString() !== req.user._id.toString()) {
+    if (task.owner.toString() !== req.user._id.toString()) {
       return res.status(403).json({ message: "Not authorized to delete this task" });
     }
 
